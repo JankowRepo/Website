@@ -1,36 +1,39 @@
+from uuid import uuid4
 from fastapi import FastAPI
-from pydantic import BaseModel
 from typing import List
+from App.models.models import User, Gender, Role
 
 app = FastAPI()
 
-class Item(BaseModel):
-    id: int
-    name: str
-    price: float
+db:List[User]=[
+    User(id=uuid4(),
+         first_name='Adam',
+         last_name='Jankowiak',
+         gender=Gender.male,
+         role=Role.admin),
+    User(id=uuid4(),
+         first_name='Jan',
+         last_name='Kowalski',
+         gender=Gender.male,
+         role=Role.user)
+]
 
 
-items = []
+@app.get("/users", response_model=List[User])
+async def get_users():
+    return db
 
-@app.get("/items", response_model=List[Item])
-async def read_items():
-    return items
+@app.post("/users", response_model=User)
+async def add_user(user: User):
+    db.append(user)
+    return user
 
-@app.get("/items/{item_id}", response_model=Item)
-async def read_item(item_id: int):
-    return items[item_id]
-
-@app.post("/items", response_model=Item)
-async def create_item(item: Item):
-    items.append(item)
+@app.put("/users/{item_id}", response_model=User)
+async def update_item(item_id: int, item: User):
+    db[item_id] = item
     return item
 
-@app.put("/items/{item_id}", response_model=Item)
-async def update_item(item_id: int, item: Item):
-    items[item_id] = item
-    return item
-
-@app.delete("/items/{item_id}")
+@app.delete("/users/{item_id}")
 async def delete_item(item_id: int):
-    del items[item_id]
+    del db[item_id]
     return {"message": "Item deleted"}
